@@ -1,14 +1,30 @@
 // Register form — creates a new account and redirects to login on success
 "use client";
 
-import { useState } from "react";
-import { useRouter } from "next/navigation";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
+
+import { useState } from "react";
+
 import { Button } from "@/components/ui/button";
+import { Field, FieldError, FieldGroup, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
-import { usePost } from "@/hooks/useApi";
+import { Spinner } from "@/components/ui/spinner";
 import { ROUTES } from "@/constants/routes";
+import { usePost } from "@/hooks/useApi";
 import type { RegisterCredentials, User } from "@/types/auth";
+
+const FIELDS: {
+  id:           keyof RegisterCredentials;
+  label:        string;
+  type:         string;
+  autoComplete: string;
+}[] = [
+  { id: "name",            label: "Name",             type: "text",     autoComplete: "name" },
+  { id: "email",           label: "Email",            type: "email",    autoComplete: "email" },
+  { id: "password",        label: "Password",         type: "password", autoComplete: "new-password" },
+  { id: "confirmPassword", label: "Confirm password", type: "password", autoComplete: "new-password" },
+];
 
 export function RegisterForm() {
   const router = useRouter();
@@ -38,18 +54,30 @@ export function RegisterForm() {
   }
 
   return (
-    <form onSubmit={handleSubmit} className="flex flex-col gap-4">
-      <Input id="name"            type="text"     label="Name"             placeholder="Jane Doe"         value={form.name}            onChange={set("name")}            required />
-      <Input id="email"           type="email"    label="Email"            placeholder="you@example.com"  value={form.email}           onChange={set("email")}           required />
-      <Input id="password"        type="password" label="Password"         placeholder="••••••••"         value={form.password}        onChange={set("password")}        required />
-      <Input id="confirmPassword" type="password" label="Confirm password" placeholder="••••••••"         value={form.confirmPassword} onChange={set("confirmPassword")} required />
-      {apiError && <p className="text-sm text-red-500">{apiError}</p>}
-      <Button type="submit" loading={isPending} className="w-full mt-2">
+    <form onSubmit={handleSubmit} className="flex flex-col gap-6">
+      <FieldGroup>
+        {FIELDS.map(({ id, label, type, autoComplete }) => (
+          <Field key={id}>
+            <FieldLabel htmlFor={id}>{label}</FieldLabel>
+            <Input
+              id={id}
+              type={type}
+              autoComplete={autoComplete}
+              value={form[id]}
+              onChange={set(id)}
+              required
+            />
+          </Field>
+        ))}
+        {apiError ? <FieldError>{apiError}</FieldError> : null}
+      </FieldGroup>
+      <Button type="submit" size="lg" disabled={isPending} className="w-full">
+        {isPending ? <Spinner data-icon="inline-start" /> : null}
         Create account
       </Button>
-      <p className="text-center text-sm text-zinc-500">
+      <p className="text-center text-sm text-muted-foreground">
         Already have an account?{" "}
-        <Link href={ROUTES.LOGIN} className="font-medium text-zinc-900 underline">
+        <Link href={ROUTES.LOGIN} className="font-medium text-foreground underline">
           Sign in
         </Link>
       </p>

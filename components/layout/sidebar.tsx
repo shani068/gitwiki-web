@@ -8,6 +8,7 @@ import { ROUTES } from "@/constants/routes";
 
 const NAV_ITEMS = [
   { label: "Dashboard", href: ROUTES.DASHBOARD },
+  { label: "Wikis",     href: ROUTES.WIKIS     },
   { label: "Settings",  href: ROUTES.SETTINGS  },
 ] as const;
 

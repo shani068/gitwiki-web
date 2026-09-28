@@ -26,6 +26,11 @@ import prettier from "eslint-config-prettier";
 import nextPlugin from "@next/eslint-plugin-next";
 
 export default [
+  // ── Global ignores — build output is never linted ────────────────────────
+  {
+    ignores: ["node_modules/**", ".next/**", "out/**", "dist/**", "next-env.d.ts"],
+  },
+
   // ── Next.js core web vitals — must be first ──────────────────────────────
   {
     plugins: {

@@ -1,23 +1,29 @@
 // Root layout — sets up fonts, global styles, and wraps the tree in all providers
 import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
-import { AppProviders } from "@/providers/app-providers";
+
+import { IBM_Plex_Sans, JetBrains_Mono } from "next/font/google";
+
 import { APP_NAME } from "@/constants/config";
+import { AppProviders } from "@/providers/app-providers";
 import "./globals.css";
 
-const geistSans = Geist({
-  variable: "--font-geist-sans",
+const plexSans = IBM_Plex_Sans({
+  variable: "--font-plex-sans",
   subsets:  ["latin"],
+  weight:   ["400", "500", "600"],
 });
 
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
+const jetbrainsMono = JetBrains_Mono({
+  variable: "--font-jetbrains-mono",
   subsets:  ["latin"],
 });
 
 export const metadata: Metadata = {
-  title:       APP_NAME,
-  description: `${APP_NAME} — built with Next.js`,
+  title: {
+    default:  APP_NAME,
+    template: `%s · ${APP_NAME}`,
+  },
+  description: "A living, searchable wiki generated from your Git repositories.",
 };
 
 export default function RootLayout({
@@ -26,9 +32,10 @@ export default function RootLayout({
   return (
     <html
       lang="en"
-      className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
+      suppressHydrationWarning
+      className={`${plexSans.variable} ${jetbrainsMono.variable} h-full antialiased`}
     >
-      <body className="min-h-full flex flex-col">
+      <body className="flex min-h-dvh flex-col">
         <AppProviders>{children}</AppProviders>
       </body>
     </html>

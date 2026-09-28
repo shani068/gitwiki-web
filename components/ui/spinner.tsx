@@ -1,23 +1,10 @@
-// Inline loading spinner — drop into any layout that needs a loading indicator
-import { cn } from "@/utils/cn";
+import { cn } from "@/lib/utils"
+import { Loader2Icon } from "lucide-react"
 
-interface SpinnerProps {
-  size?:      "sm" | "md" | "lg";
-  className?: string;
-}
-
-const sizeClasses = { sm: "h-4 w-4", md: "h-6 w-6", lg: "h-10 w-10" };
-
-export function Spinner({ size = "md", className }: SpinnerProps) {
+function Spinner({ className, ...props }: React.ComponentProps<"svg">) {
   return (
-    <span
-      role="status"
-      aria-label="Loading"
-      className={cn(
-        "inline-block animate-spin rounded-full border-2 border-current border-t-transparent text-zinc-400",
-        sizeClasses[size],
-        className
-      )}
-    />
-  );
+    <Loader2Icon data-slot="spinner" role="status" aria-label="Loading" className={cn("size-4 animate-spin", className)} {...props} />
+  )
 }
+
+export { Spinner }

@@ -1,6 +1,8 @@
-# MyApp — Next.js Template
+# GitWiki Web
 
-A production-ready Next.js 16 starter with App Router, React 19, TypeScript, Tailwind CSS v4, TanStack Query v5, and Axios. Designed for scalability from day one.
+Web app for GitWiki. People sign in here to browse a living, searchable wiki generated from a Git repository.
+
+This repository is the frontend. It talks to [gitwiki-api](https://github.com/shani068/gitwiki-api) for authentication, user accounts, and wiki data.
 
 ---
 
@@ -24,7 +26,7 @@ A production-ready Next.js 16 starter with App Router, React 19, TypeScript, Tai
 ## Project Structure
 
 ```
-next-js-template/
+gitwiki-web/
 ├── app/
 │   ├── (auth)/                    # Auth route group — /login, /register
 │   │   ├── layout.tsx
@@ -90,8 +92,8 @@ next-js-template/
 
 ```bash
 # Clone the repository
-git clone https://github.com/your-org/next-js-template.git
-cd next-js-template
+git clone https://github.com/shani068/gitwiki-web
+cd gitwiki-web
 
 # Install dependencies
 bun install
@@ -102,7 +104,7 @@ bun install
 Create a `.env.local` file in the project root:
 
 ```env
-NEXT_PUBLIC_API_URL=http://localhost:4000
+NEXT_PUBLIC_API_URL=http://localhost:3000
 ```
 
 > Variables prefixed with `NEXT_PUBLIC_` are exposed to the browser. All others are server-only.
@@ -160,7 +162,7 @@ Service functions can be called from Server Actions or unit tests without React.
 | Service exports | `const serviceName = { method }` object |
 | Constant naming | `UPPER_SNAKE_CASE` |
 | Type declarations | `interface` for objects · `type` for unions and primitives |
-| File naming | `kebab-case.tsx` for components · `camelCase.ts` for everything else |
+| File naming | `kebab-case` everywhere (`login-form.tsx`, `auth.service.ts`) · hooks are `useCamelCase.ts` |
 
 ---
 

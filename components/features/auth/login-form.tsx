@@ -1,16 +1,19 @@
 // Login form — calls the login endpoint and redirects to dashboard on success
 "use client";
 
-import { useState } from "react";
-import { useRouter } from "next/navigation";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
+
+import { useState } from "react";
+
 import { Button } from "@/components/ui/button";
+import { Field, FieldError, FieldGroup, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
+import { Spinner } from "@/components/ui/spinner";
+import { ROUTES } from "@/constants/routes";
 import { usePost } from "@/hooks/useApi";
 import { setSession } from "@/lib/auth";
-import { ROUTES } from "@/constants/routes";
-import type { AuthSession } from "@/types/auth";
-import type { LoginCredentials } from "@/types/auth";
+import type { AuthSession, LoginCredentials } from "@/types/auth";
 
 export function LoginForm() {
   const router = useRouter();
@@ -32,32 +35,41 @@ export function LoginForm() {
   }
 
   return (
-    <form onSubmit={handleSubmit} className="flex flex-col gap-4">
-      <Input
-        id="email"
-        type="email"
-        label="Email"
-        placeholder="you@example.com"
-        value={form.email}
-        onChange={(e) => setForm((f) => ({ ...f, email: e.target.value }))}
-        required
-      />
-      <Input
-        id="password"
-        type="password"
-        label="Password"
-        placeholder="••••••••"
-        value={form.password}
-        onChange={(e) => setForm((f) => ({ ...f, password: e.target.value }))}
-        required
-      />
-      {apiError && <p className="text-sm text-red-500">{apiError}</p>}
-      <Button type="submit" loading={isPending} className="w-full mt-2">
+    <form onSubmit={handleSubmit} className="flex flex-col gap-6">
+      <FieldGroup>
+        <Field>
+          <FieldLabel htmlFor="email">Email</FieldLabel>
+          <Input
+            id="email"
+            type="email"
+            autoComplete="email"
+            placeholder="you@example.com"
+            value={form.email}
+            onChange={(e) => setForm((f) => ({ ...f, email: e.target.value }))}
+            required
+          />
+        </Field>
+        <Field data-invalid={apiError ? true : undefined}>
+          <FieldLabel htmlFor="password">Password</FieldLabel>
+          <Input
+            id="password"
+            type="password"
+            autoComplete="current-password"
+            value={form.password}
+            onChange={(e) => setForm((f) => ({ ...f, password: e.target.value }))}
+            aria-invalid={apiError ? true : undefined}
+            required
+          />
+          {apiError ? <FieldError>{apiError}</FieldError> : null}
+        </Field>
+      </FieldGroup>
+      <Button type="submit" size="lg" disabled={isPending} className="w-full">
+        {isPending ? <Spinner data-icon="inline-start" /> : null}
         Sign in
       </Button>
-      <p className="text-center text-sm text-zinc-500">
+      <p className="text-center text-sm text-muted-foreground">
         No account?{" "}
-        <Link href={ROUTES.REGISTER} className="font-medium text-zinc-900 underline">
+        <Link href={ROUTES.REGISTER} className="font-medium text-foreground underline">
           Create one
         </Link>
       </p>
