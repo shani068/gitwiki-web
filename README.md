@@ -1,83 +1,141 @@
 # GitWiki Web
 
-Web app for GitWiki. People sign in here to browse a living, searchable wiki generated from a Git repository.
+The web app for **GitWiki**, a tool that turns a GitHub repository into a readable, searchable wiki.
 
-This repository is the frontend. It talks to [gitwiki-api](https://github.com/shani068/gitwiki-api) for authentication, user accounts, and wiki data.
+Here you browse your repositories, open a generated wiki, and read its pages, with every page linked back to the file and commit it came from. The app talks to [gitwiki-api](https://github.com/shani068/gitwiki-api) for accounts and data.
+
+---
+
+## Table of Contents
+
+- [Key Features](#key-features)
+- [Project Status](#project-status)
+- [Pages](#pages)
+- [Tech Stack](#tech-stack)
+- [Project Structure](#project-structure)
+- [Getting Started](#getting-started)
+- [Environment Variables](#environment-variables)
+- [Available Scripts](#available-scripts)
+- [How Data Flows](#how-data-flows)
+- [Development Workflow](#development-workflow)
+- [License](#license)
+
+---
+
+## Key Features
+
+**Repository library** (`/wikis`)
+- Lists repositories with their index status: *Indexed*, *Indexing*, or *Index failed* (with the reason).
+- Shows page count, source commit, and when each repository was last indexed.
+- Filter the list as you type.
+- Add a repository by entering `owner/repo` or a `github.com` URL.
+
+**Wiki reader** (`/wikis/:owner/:repo`)
+- Page tree grouped into sections, always visible on desktop and in a slide-out menu on mobile.
+- Search across page titles and headings with <kbd>⌘</kbd> <kbd>K</kbd>, <kbd>Ctrl</kbd> <kbd>K</kbd>, or <kbd>/</kbd>.
+- "On this page" outline that highlights the section you are reading.
+- Markdown rendering with tables, heading anchors, and syntax-highlighted code blocks with a copy button.
+- Breadcrumbs, previous/next links, and links to the source file and commit on GitHub.
+- Clear loading, not-found, still-indexing, and failed states.
+
+**General**
+- Light, dark, and system themes.
+- Sign-in, registration, dashboard, and settings screens.
+
+---
+
+## Project Status
+
+The project is in active development. The wiki reader is complete, but it runs on **built-in sample data** until the backend serves wiki pages.
+
+| Area | Status |
+| --- | --- |
+| Landing page, theme switching | ✅ Working |
+| Repository library and wiki reader | ✅ Working with sample data (default) |
+| Wiki reader against the real API | ⏳ Ready in the client; the backend `/api/v1/wikis` endpoints don't exist yet |
+| Sign-in and registration forms | ⏳ UI done; they call `/auth/login` and `/auth/register`, which don't match the backend's Better Auth routes (`/api/auth/sign-in/email`, `/api/auth/sign-up/email`) |
+| Settings form | ⏳ UI done; sends `PATCH /users/me`, while the backend exposes `PUT /api/v1/users/me` |
+| Dashboard | ⏳ Stats and "Recent Users" show placeholder data |
+| Route protection | ❌ Not implemented; all pages are publicly reachable |
+
+The sample data contains three repositories: `shani068/gitwiki-api` (ready, with 7 pages), `shani068/gitwiki-web` (indexing), and `shani068/infra-notes` (failed). Open **Browse wikis** on the home page to try them.
+
+---
+
+## Pages
+
+| Route | Description |
+| --- | --- |
+| `/` | Landing page |
+| `/login` | Sign-in form |
+| `/register` | Registration form |
+| `/dashboard` | Dashboard overview (placeholder data) |
+| `/settings` | Profile settings form |
+| `/wikis` | Repository library |
+| `/wikis/:owner/:repo` | A repository's wiki, opened on its first page |
+| `/wikis/:owner/:repo/:slug…` | A specific wiki page, e.g. `/wikis/shani068/gitwiki-api/architecture/indexing-pipeline` |
 
 ---
 
 ## Tech Stack
 
-| Layer | Technology | Version |
-|---|---|---|
-| Framework | Next.js (App Router) | 16.2.4 |
-| UI Library | React | 19.2.4 |
-| Language | TypeScript | ^5 |
-| Styling | Tailwind CSS | ^4 |
-| Server State | TanStack Query | ^5 |
-| HTTP Client | Axios | ^1 |
-| Validation | Zod | ^4 |
-| Package Manager | Bun | latest |
-| Linting | ESLint | ^9 |
-| Formatting | Prettier | ^3 |
+| Area | Technology |
+| --- | --- |
+| Framework | [Next.js 16](https://nextjs.org) (App Router) |
+| UI library | React 19 |
+| Language | TypeScript |
+| Styling | [Tailwind CSS 4](https://tailwindcss.com), configured in `app/globals.css` (no `tailwind.config`) |
+| Components | [shadcn/ui](https://ui.shadcn.com) on Radix UI, with [Lucide](https://lucide.dev) icons |
+| Server state | [TanStack Query 5](https://tanstack.com/query) |
+| HTTP client | Axios |
+| Validation | Zod 4 |
+| Markdown | react-markdown, remark-gfm, rehype-slug, rehype-highlight |
+| Search palette | cmdk |
+| Theming | next-themes |
+| Fonts | IBM Plex Sans and JetBrains Mono (via `next/font`) |
+| Tooling | Bun, ESLint 9, Prettier (with the Tailwind plugin) |
 
 ---
 
 ## Project Structure
 
 ```
-gitwiki-web/
-├── app/
-│   ├── (auth)/                    # Auth route group — /login, /register
-│   │   ├── layout.tsx
-│   │   ├── login/
-│   │   │   ├── page.tsx
-│   │   │   └── loading.tsx
-│   │   └── register/
-│   │       └── page.tsx
-│   ├── (dashboard)/               # Dashboard route group — /dashboard, /settings
-│   │   ├── layout.tsx
-│   │   ├── dashboard/
-│   │   │   ├── page.tsx
-│   │   │   ├── loading.tsx
-│   │   │   └── error.tsx
-│   │   └── settings/
-│   │       └── page.tsx
-│   ├── error.tsx                  # Global error boundary
-│   ├── not-found.tsx              # 404 page
-│   ├── globals.css
-│   └── layout.tsx                 # Root layout with providers
+git-wiki-frontend/
+├── app/                         # Routes (Next.js App Router)
+│   ├── layout.tsx               # Root layout: fonts, metadata, providers
+│   ├── page.tsx                 # Landing page (/)
+│   ├── globals.css              # Tailwind setup and theme colors
+│   ├── error.tsx, not-found.tsx # Global error and 404 pages
+│   ├── (auth)/                  # /login, /register
+│   ├── (dashboard)/             # /dashboard, /settings (sidebar + navbar layout)
+│   └── (wiki)/wikis/            # /wikis and /wikis/[owner]/[repo]/[[...slug]]
 ├── components/
-│   ├── ui/                        # Primitive UI components (Button, Input, Spinner)
-│   ├── layout/                    # Shell components (Navbar, Sidebar)
+│   ├── ui/                      # shadcn/ui components (generated, don't hand-write)
+│   ├── layout/                  # Navbar, sidebar, theme toggle
 │   └── features/
-│       ├── auth/                  # Auth-scoped components
-│       └── dashboard/             # Dashboard-scoped components
+│       ├── auth/                # Login and register forms
+│       ├── dashboard/           # Stats, recent users, settings form
+│       └── wiki/                # Library, reader shell, nav, search, article, TOC…
 ├── hooks/
-│   ├── useApi.ts                  # Mutation hooks (POST / PUT / PATCH / DELETE / upload)
-│   └── useFetch.ts                # Query hook (GET with TanStack Query)
+│   ├── useFetch.ts              # Generic GET hook (TanStack Query)
+│   ├── useApi.ts                # usePost / usePut / usePatch / useDelete / useUpload
+│   └── useWiki.ts               # Wiki queries and the "index repository" mutation
+├── services/                    # API calls: auth, user, wiki
 ├── lib/
-│   ├── api.ts                     # Axios instance + 401 interceptor
-│   ├── auth.ts                    # Session helpers (get / set / clear)
-│   └── validations/
-│       └── auth.schema.ts         # Zod schemas for auth forms
-├── services/
-│   ├── auth.service.ts            # Login / register / logout / me
-│   └── user.service.ts            # User CRUD
-├── providers/
-│   ├── query-provider.tsx         # TanStack Query v5 QueryClientProvider
-│   └── app-providers.tsx          # Root provider tree
-├── constants/
-│   ├── routes.ts                  # ROUTES constant map
-│   └── config.ts                  # APP_NAME, TOKEN_KEY, pagination defaults
-├── utils/
-│   ├── cn.ts                      # clsx + tailwind-merge helper
-│   ├── format-date.ts             # formatDate / formatDateTime / timeAgo
-│   └── resolve-error.ts           # Converts any thrown value to a string
-└── types/
-    ├── api.d.ts                   # ApiResponse<T>, PaginatedResponse<T>, ApiError
-    └── auth.d.ts                  # User, UserRole, AuthSession, credentials
+│   ├── api.ts                   # Shared Axios instance (redirects to /login on 401)
+│   ├── auth.ts                  # Session helpers (localStorage)
+│   ├── validations/             # Zod schemas for forms
+│   └── wiki/                    # Navigation and heading helpers, errors, sample data
+├── providers/                   # Theme, TanStack Query, and tooltip providers
+├── constants/                   # App config and route map
+├── types/                       # Shared TypeScript types (API, auth, wiki)
+├── utils/                       # cn, date formatting, error messages
+├── public/                      # Static files
+├── components.json              # shadcn/ui configuration
+└── AGENTS.md                    # Conventions for AI coding agents (and humans)
 ```
+
+Folders in parentheses, such as `(auth)`, are **route groups**: they share a layout but don't appear in the URL.
 
 ---
 
@@ -85,109 +143,139 @@ gitwiki-web/
 
 ### Prerequisites
 
-- [Bun](https://bun.sh) >= 1.0
-- Node.js >= 20 (for tooling compatibility)
+- [Bun](https://bun.sh) 1.0 or newer
+- Optional: the [GitWiki API](https://github.com/shani068/gitwiki-api) running locally. The wiki reader works without it using sample data.
 
-### Installation
+### 1. Install
 
 ```bash
-# Clone the repository
-git clone https://github.com/shani068/gitwiki-web
+git clone https://github.com/shani068/gitwiki-web.git
 cd gitwiki-web
-
-# Install dependencies
 bun install
 ```
 
-### Environment Variables
+### 2. Configure (optional)
 
-Create a `.env.local` file in the project root:
+Create a `.env.local` file in the project root if you need to change the defaults (see [Environment Variables](#environment-variables)):
 
 ```env
 NEXT_PUBLIC_API_URL=http://localhost:3000
 ```
 
-> Variables prefixed with `NEXT_PUBLIC_` are exposed to the browser. All others are server-only.
-
-### Development
+### 3. Run
 
 ```bash
 bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) in your browser.
+Open [http://localhost:3000](http://localhost:3000).
+
+> **Running with the backend?** The API also uses port `3000` by default. Start the API first, then run the web app on another port:
+>
+> ```bash
+> bun dev --port 3001
+> ```
+>
+> Then open [http://localhost:3001](http://localhost:3001).
+
+---
+
+## Environment Variables
+
+Both variables are optional. Because they start with `NEXT_PUBLIC_`, they are included in the browser bundle, so never put secrets in them.
+
+| Variable | Default | Description |
+| --- | --- | --- |
+| `NEXT_PUBLIC_API_URL` | `http://localhost:3000` | Base URL of the GitWiki API. |
+| `NEXT_PUBLIC_WIKI_SOURCE` | `fixtures` | Where wiki data comes from. Leave unset to use the built-in sample data; set to `api` to call the backend. |
+
+After changing `.env.local`, restart `bun dev`.
 
 ---
 
 ## Available Scripts
 
 | Command | Description |
-|---|---|
+| --- | --- |
 | `bun dev` | Start the development server with hot reload |
-| `bun build` | Build the application for production |
-| `bun start` | Serve the production build |
-| `bun lint` | Run ESLint across the codebase |
+| `bun run build` | Create an optimized production build |
+| `bun start` | Serve the production build (run `bun run build` first) |
+| `bun lint` | Check code with ESLint |
+| `bunx tsc --noEmit` | Type-check the project |
+
+Use `bun run build`, not `bun build`: the latter runs Bun's own bundler instead of the project's build script.
+
+There is no automated test suite yet.
 
 ---
 
-## Architecture Decisions
+## How Data Flows
 
-### Route Groups
-Pages are organized into `(auth)` and `(dashboard)` route groups. Parentheses prevent the folder name from appearing in the URL while still allowing a shared layout for each group.
-
-### Server vs. Client Components
-- **Pages and layouts** are React Server Components by default — no JavaScript sent to the browser.
-- **Interactive leaf nodes** (forms, navigation with active state) are explicitly opted into `"use client"`.
-- This keeps the client bundle minimal and enables server-side data fetching without waterfalls.
-
-### Data Layer Separation
 ```
-services/   ← raw API calls (framework-agnostic, testable in isolation)
-hooks/      ← React wrappers around services using TanStack Query
+Component  →  hook (hooks/)  →  service (services/)  →  api (lib/api.ts)  →  GitWiki API
 ```
-Service functions can be called from Server Actions or unit tests without React. Hooks exist only in Client Components.
 
-### Error Handling
-- `resolveError` in `utils/` normalises every thrown value — Axios errors, native Errors, and unknown objects — into a displayable string.
-- Route-level `error.tsx` files scope error boundaries to their subtree; the global `app/error.tsx` catches everything else.
+- **Components** never call Axios or `fetch` directly.
+- **Hooks** wrap services with TanStack Query for caching, loading states, and retries.
+- **Services** hold the actual API calls and can be used outside React.
+- **`lib/api.ts`** is the single Axios instance. It sends cookies (`withCredentials`) and redirects to `/login` when the API returns `401`.
 
----
+### Wiki data source
 
-## Conventions
+`services/wiki.service.ts` switches on `NEXT_PUBLIC_WIKI_SOURCE`:
 
-| Concern | Convention |
-|---|---|
-| Component exports | Named exports everywhere except `page.tsx` / `layout.tsx` |
-| Hook naming | Always prefixed with `use` |
-| Service exports | `const serviceName = { method }` object |
-| Constant naming | `UPPER_SNAKE_CASE` |
-| Type declarations | `interface` for objects · `type` for unions and primitives |
-| File naming | `kebab-case` everywhere (`login-form.tsx`, `auth.service.ts`) · hooks are `useCamelCase.ts` |
+- **`fixtures` (default):** reads sample data from `lib/wiki/fixtures/`. It simulates network latency and "not found" errors so every loading and error state can be seen without a backend.
+- **`api`:** calls the backend. These are the endpoints the client expects, each wrapped in the API's standard `{ data, message, success }` envelope:
 
----
+| Method | Endpoint | Returns |
+| --- | --- | --- |
+| GET | `/api/v1/wikis` | `WikiRepository[]` |
+| GET | `/api/v1/wikis/:owner/:repo` | `WikiDetail` (repository + page tree) |
+| GET | `/api/v1/wikis/:owner/:repo/pages/:slug` | `WikiPage` (Markdown content + metadata) |
+| POST | `/api/v1/wikis` with body `{ "repo": "owner/repo" }` | `WikiRepository` |
 
-## Adding a New Feature
-
-1. **Type** — `types/your-feature.d.ts`
-2. **Validation** — `lib/validations/your-feature.schema.ts`
-3. **Service** — `services/your-feature.service.ts`
-4. **Components** — `components/features/your-feature/`
-5. **Page** — `app/(dashboard)/your-feature/page.tsx`
+The data shapes are defined in `types/wiki.d.ts`.
 
 ---
 
-## Deployment
+## Development Workflow
 
-The recommended deployment target is [Vercel](https://vercel.com). Push to your main branch and Vercel handles the rest.
+### Adding a feature
 
-For self-hosting, run:
+1. **Types:** `types/<feature>.d.ts`
+2. **Validation:** `lib/validations/<feature>.schema.ts`
+3. **Service:** `services/<feature>.service.ts`, using `api` from `lib/api.ts`
+4. **Hook** (if needed): `hooks/use<Feature>.ts`
+5. **Components:** `components/features/<feature>/`, composed from shadcn/ui components
+6. **Page:** `app/(dashboard)/<feature>/page.tsx`, or another route group
+7. Add the route to `constants/routes.ts`
+
+### Adding UI components
+
+UI building blocks come from shadcn/ui. Add new ones with the CLI instead of writing them by hand:
 
 ```bash
-bun build
-bun start
+bunx shadcn@latest add <component>
 ```
 
-Refer to the [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for Docker and Node.js server options.
+This writes to `components/ui/`. Feature components should only compose these.
+
+### Conventions
+
+| Topic | Convention |
+| --- | --- |
+| Package manager | Bun only (`bun add`, `bunx`), not npm/npx |
+| File names | `kebab-case` (`login-form.tsx`, `wiki.service.ts`); hooks are `useCamelCase.ts` |
+| Exports | Named exports, except `page.tsx` and `layout.tsx` |
+| Services | Exported as an object, e.g. `export const wikiService = { … }` |
+| Constants | `UPPER_SNAKE_CASE` |
+| Types | `interface` for objects, `type` for unions |
+| Components | Server Components by default; add `"use client"` only for interactive parts |
+| Routes | Use `ROUTES` and `wikiPath()` from `constants/routes.ts` instead of hard-coded paths |
+
+Before committing, run `bunx tsc --noEmit` and `bun lint`.
+
+This project uses Next.js 16, which changes some APIs from earlier versions. When in doubt, check the docs bundled in `node_modules/next/dist/docs/`. See [AGENTS.md](AGENTS.md) for more rules.
 
 ---
 
